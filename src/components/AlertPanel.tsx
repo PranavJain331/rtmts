@@ -1,48 +1,65 @@
-import React from 'react';
-import { Alert } from '../types';
-import { X, AlertTriangle, AlertCircle, Info } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { AlertTriangle } from "lucide-react";
+import { Alert } from "../types";
 
 interface AlertPanelProps {
   alerts: Alert[];
   onDismiss: (id: string) => void;
 }
 
-export const AlertPanel: React.FC<AlertPanelProps> = ({ alerts, onDismiss }) => {
-  if (alerts.length === 0) return null;
+export const AlertPanel: React.FC<AlertPanelProps> = ({
+  alerts,
+
+}) => {
+  const [latestAlert, setLatestAlert] =
+    useState<Alert | null>(null);
+
+  useEffect(() => {
+    if (alerts.length > 0) {
+      setLatestAlert(alerts[0]);
+
+      const timer = setTimeout(() => {
+        setLatestAlert(null);
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [alerts]);
+
+  if (!latestAlert) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-md w-full">
-      {alerts.map((alert) => {
-        const isError = alert.type === 'error';
-        const isWarning = alert.type === 'warning';
+    <div className="fixed bottom-4 right-4 z-50">
+      <div className="bg-red-950/90 border border-red-500/40 rounded-xl p-4 w-96 shadow-xl">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-red-400 mt-1" />
 
-        return (
-          <div
-            key={alert.id}
-            className={`flex items-start p-4 rounded-lg border shadow-lg ${
-              isError ? 'bg-red-950/50 border-red-500/50 text-red-200' :
-              isWarning ? 'bg-orange-950/50 border-orange-500/50 text-orange-200' :
-              'bg-cyan-950/50 border-cyan-500/50 text-cyan-200'
-            }`}
-          >
-            <div className="flex-shrink-0 mr-3 mt-0.5">
-              {isError && <AlertTriangle className="w-5 h-5 text-red-500" />}
-              {isWarning && <AlertCircle className="w-5 h-5 text-orange-500" />}
-              {!isError && !isWarning && <Info className="w-5 h-5 text-cyan-500" />}
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium">{alert.message}</p>
-              <p className="text-xs opacity-70 mt-1">{new Date(alert.timestamp).toLocaleTimeString()}</p>
-            </div>
-            <button
-              onClick={() => onDismiss(alert.id)}
-              className="flex-shrink-0 ml-4 hover:opacity-70 transition-opacity"
-            >
-              <X className="w-4 h-4 cursor-pointer" />
-            </button>
+          <div className="flex-1">
+            <h4 className="text-red-300 font-semibold">
+              New Security Alert
+            </h4>
+
+            <p className="text-white text-sm mt-1">
+              {latestAlert.message}
+            </p>
+
+            <p className="text-slate-400 text-xs mt-2">
+              {new Date(
+                latestAlert.timestamp
+              ).toLocaleTimeString()}
+            </p>
           </div>
-        );
-      })}
+
+          <button
+            onClick={() =>
+              setLatestAlert(null)
+            }
+            className="text-slate-400 hover:text-white"
+          >
+            ×
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
